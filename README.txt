@@ -1,18 +1,21 @@
-RUTINA v7
+RUTINA v8
 
-Correcciones:
-- Barra de navegación inferior con colores oscuros y texto visible.
-- Los botones Inicio/Rutina/Progreso ya no heredan el estilo blanco por defecto.
-- En la pantalla de Rutina ahora aparece + Día de forma permanente.
-- Se puede agregar cualquier cantidad de días, uno tras otro.
-- También hay + Agregar día en el resumen superior.
+Importante:
+- Esta versión usa archivos nuevos con nombres únicos:
+  - rutina-v8.js
+  - rutina-v8.css
+- index.html los carga directamente.
+- Esto evita que GitHub Pages o el navegador sigan sirviendo el app.js/style.css anterior.
 
-Conserva las funciones de v6:
+Funciones incluidas:
 - Crear, cambiar y borrar rutinas.
+- Agregar días sin límite.
 - Semanas indefinidas.
-- PENDIENTE / ENTRENADO / NO ENTRENÉ.
+- Estados PENDIENTE / ENTRENADO / NO ENTRENÉ.
 - Cierre automático de semana.
-- Cronómetro total.
+- Cronómetro total del entrenamiento.
 - Descanso por ejercicio.
-- Aproximaciones, sets, KG/LB.
-- Historial semanal y referencias.
+- Aproximaciones y sets de trabajo.
+- KG/LB.
+- Historial semanal y referencia de semana anterior.
+- Comentarios y tiempos de sesión.
