@@ -1,25 +1,14 @@
-# RUTINA — prototipo PWA
+RUTINA v5
 
-Esta es una primera versión funcional de la app de entrenamiento inspirada en las capturas que compartiste.
-
-Incluye:
-- Crear una rutina y cambiar su nombre.
-- Crear tantos días de entrenamiento como quieras y renombrarlos.
-- Añadir tantos ejercicios como quieras por día.
-- Elegir número inicial de sets y reps objetivo; después puedes añadir más sets.
-- Registrar peso, repeticiones y marcar cada set como completado con el círculo.
-- Cambiar entre kg y lb dentro del ejercicio; al cambiar de unidad se convierte el peso de la sesión actual.
-- Comentarios por sesión.
-- Conserva el historial de semanas anteriores en el mismo dispositivo.
-- Muestra la referencia de la sesión anterior para progresión.
-- Racha, días entrenados, semanas y calendario.
-- Guarda todo en localStorage, sin cuenta ni servidor.
-
-## Probar en computadora
-Abre `index.html` en un navegador moderno.
-
-## Instalar en iPhone
-Para instalarla como app PWA en iPhone, los archivos deben estar publicados en una URL HTTPS.
-Luego, en Safari: Compartir -> Añadir a pantalla de inicio.
-
-Para la siguiente iteración conviene publicar este mismo contenido en GitHub Pages, Netlify o Vercel y después probarlo directamente en el iPhone.
+Flujo de semanas:
+- No hay duración fija para la rutina.
+- Cada semana contiene los días definidos por el usuario.
+- Cada día puede quedar PENDIENTE, ENTRENADO o NO ENTRENÉ.
+- Al marcar NO ENTRENÉ, el día queda registrado sin borrar ningún historial.
+- Al completar el último set de trabajo del último ejercicio de un día, la sesión se guarda automáticamente.
+- El tiempo de entrenamiento se registra en HH:MM:SS.
+- Cuando todos los días de la semana quedan ENTRENADO o NO ENTRENÉ, la app inicia automáticamente una nueva semana.
+- Los datos de semanas anteriores permanecen disponibles como referencia.
+- Aproximaciones, sets de trabajo, KG/LB, descanso por ejercicio, comentarios y referencia de la semana anterior.
+- No hay catálogo de ejercicios impuesto.
+- La interfaz fuerza cache-busting para que GitHub Pages cargue la versión nueva.
