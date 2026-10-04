@@ -43,6 +43,9 @@
     .check.done{background:var(--accent);border-color:var(--accent)}.check.skip{background:#3a312c;border-color:#6b625d;color:#fff}
     .btn{border:0;border-radius:13px;padding:12px 15px;font-weight:900;cursor:pointer}.btn.primary{background:var(--accent)}.btn.secondary{background:var(--panel3);border:1px solid var(--line)}.btn.ghost{background:transparent;border:1px solid var(--line2)}.btn.danger{background:#32130e;border:1px solid #6e2c20}.btn.wide{width:100%}
     .round{width:46px;height:46px;border-radius:50%;border:1px solid #67351f;background:#1a0d08cc;display:grid;place-items:center;cursor:pointer}.icon{font-size:19px}
+.exercise-edit-btn{width:38px;height:38px;border-radius:50%;border:1px solid #6b351d;background:#1a0d08;display:grid;place-items:center;cursor:pointer;font-weight:900}
+.exercise-delete-btn{width:38px;height:38px;border-radius:50%;border:1px solid #6d2b20;background:#32130e;color:#ff9a83;display:grid;place-items:center;cursor:pointer;font-weight:900}
+
     .pill{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;border:1px solid #65351f;background:#281108;color:#f5ddd1;font-size:11px;font-weight:900}
     .badge{display:inline-flex;align-items:center;padding:6px 9px;border-radius:999px;font-size:10px;font-weight:900}.badge.orange{background:var(--accent)}.badge.gray{background:#3b322d;color:#f1e9e4}
     .form{display:grid;gap:11px}.label{display:block;font-size:12px;letter-spacing:.6px;color:#cdbdb5;font-weight:900;margin-bottom:6px}
@@ -256,7 +259,7 @@
     if(!r)return `<div class="empty" style="margin-top:30px"><h2>Sin rutinas</h2><p style="margin-top:6px">Crea una nueva para empezar.</p><button class="btn primary" style="margin-top:14px" data-action="new-routine">+ Nueva rutina</button></div>`;
     return `<div class="between" style="margin-bottom:12px"><div><div class="eyebrow">RUTINA ACTIVA</div><h2>${esc(r.name)}</h2></div><button class="btn primary" data-action="new-routine">+ Nueva</button></div>
       <div class="card"><div class="between"><div><b>Semana ${r.currentWeek}</b><div class="small">${r.days.length} días configurados · la rutina continúa indefinidamente</div></div><span class="pill">${r.days.length} días</span></div>
-        <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="btn primary" data-action="add-day">+ Agregar día</button><button class="btn secondary" data-action="edit-routine">Editar rutina</button><button class="btn danger" data-action="delete-routine">Borrar rutina</button></div></div>
+        <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="btn primary" data-action="add-day">+ Agregar día</button><button class="btn secondary" data-action="edit-routine">Editar nombre de rutina</button><button class="btn danger" data-action="delete-routine">Borrar rutina</button></div></div>
       <div class="section-title">Semana ${r.currentWeek}</div>
       ${r.days.map((d,i)=>`<div class="card day-card click-card" data-open-day="${d.id}"><div class="day-badge">${i+1}</div><div class="card-main"><div class="card-title">${esc(d.name)}</div><div class="card-meta">${d.exercises.length} ejercicios</div></div><div class="check">→</div></div>`).join("")||`<div class="empty">No tienes días.<br><button class="btn secondary" style="margin-top:12px" data-action="add-day">+ Agregar día</button></div>`}
       ${db.routines.length>1?`<div class="section-title">Mis rutinas</div>${db.routines.map(x=>`<div class="card between"><div><b>${esc(x.name)}</b><div class="small">Semana ${x.currentWeek} · ${x.days.length} días</div></div>${x.id===r.id?`<span class="badge orange">ACTIVA</span>`:`<button class="btn secondary" data-action="switch-routine" data-rid="${x.id}">Usar</button>`}</div>`).join("")}`:""}
@@ -269,7 +272,7 @@
     return `<div class="workout-header"><button class="round" data-action="back-home">←</button><div class="grow" style="text-align:center"><div class="eyebrow">SEMANA ${r.currentWeek}</div><div class="workout-title">${esc(d.name)}</div></div><button class="round" data-action="edit-day">✎</button></div>
       <div class="card"><div class="between"><div><b>${d.exercises.length} ejercicios</b><div class="small">Aquí ves el plan. Durante el entrenamiento los ejercicios se abren uno por uno.</div></div><button class="btn secondary" data-action="add-exercise">+ Ejercicio</button></div>
       ${st.status!=="pending"?`<div style="margin-top:10px">${st.status==="trained"?`<span class="badge orange">✓ ENTRENADO</span>`:`<span class="badge gray">NO ENTRENÉ</span>`}</div>`:""}</div>
-      ${d.exercises.length?`<div class="card">${d.exercises.map((e,i)=>`<div class="plan-row"><div class="plan-number">${i+1}</div><div class="plan-main"><div class="exercise-name">${esc(e.name)}</div><div class="exercise-meta">${e.warmupSets} aprox. · ${e.workSets} sets · ${e.defaultReps} reps · ${fmtShort(e.restSeconds)} descanso</div></div><button class="round" data-action="exercise-edit" data-eid="${e.id}">→</button></div>`).join("")}</div>`:`<div class="empty">No hay ejercicios. Añade los que tú quieras.</div>`}
+      ${d.exercises.length?`<div class="card">${d.exercises.map((e,i)=>`<div class="plan-row"><div class="plan-number">${i+1}</div><div class="plan-main"><div class="exercise-name">${esc(e.name)}</div><div class="exercise-meta">${e.warmupSets} aprox. · ${e.workSets} sets · ${e.defaultReps} reps · ${fmtShort(e.restSeconds)} descanso</div></div><div class="row"><button class="exercise-edit-btn" data-action="exercise-edit" data-eid="${e.id}" aria-label="Editar ejercicio">✎</button><button class="exercise-delete-btn" data-action="exercise-delete" data-eid="${e.id}" aria-label="Borrar ejercicio">×</button></div></div>`).join("")}</div>`:`<div class="empty">No hay ejercicios. Añade los que tú quieras.</div>`}
       ${st.status==="pending"&&d.exercises.length?`<div class="stack"><button class="btn primary wide" data-action="start-workout">COMENZAR ENTRENAMIENTO</button><button class="btn ghost wide" data-action="no-train">NO ENTRENÉ</button></div>`:""}
       ${st.status==="trained"?`<div class="card"><div class="between"><div><b>Sesión terminada</b><div class="small">${fmtDate((st.finishedAt||localISO()).slice(0,10))}</div></div><b>${fmtTime(st.durationSec)}</b></div></div>`:""}`;
   }
@@ -365,6 +368,7 @@
     if(a==="edit-day")return editDay();
     if(a==="add-exercise")return addExercise();
     if(a==="exercise-edit")return editExercise(el.dataset.eid);
+    if(a==="exercise-delete")return deleteExercise(el.dataset.eid);
     if(a==="delete-exercise")return deleteExercise(el.dataset.eid);
     if(a==="start-day"){dayId=el.dataset.did;return startSession()}
     if(a==="skip-day"){dayId=el.dataset.did;return noTrain()}
@@ -403,7 +407,7 @@
   }
   function closeModal(){qs("#modalRoot").innerHTML=""}
   function createRoutine(){openModal("Nueva rutina",`<div class="form"><div><label class="label">NOMBRE</label><input id="mName" class="input" placeholder="Ej. PPL X LEG"></div><div class="small">No hay una duración fija: la rutina puede continuar indefinidamente.</div></div>`,()=>{const r={id:uid(),name:qs("#mName").value.trim()||"Mi rutina",currentWeek:1,weekStartedAt:localISO(),completedWeeks:[],weeks:{},days:[]};db.routines.push(r);routineId=r.id;dayId=null;save()})}
-  function editRoutine(){const r=activeRoutine();openModal("Editar rutina",`<div><label class="label">NOMBRE</label><input id="mName" class="input" value="${esc(r.name)}"></div>`,()=>{r.name=qs("#mName").value.trim()||r.name;save()})}
+  function editRoutine(){const r=activeRoutine();openModal("Editar nombre de rutina",`<div><label class="label">NOMBRE</label><input id="mName" class="input" value="${esc(r.name)}"></div>`,()=>{r.name=qs("#mName").value.trim()||r.name;save()})}
   function deleteRoutine(){const r=activeRoutine();if(!r)return;if(!confirm(`¿Borrar "${r.name}" y todo su historial?`))return;db.routines=db.routines.filter(x=>x.id!==r.id);routineId=db.routines[0]?.id||null;dayId=null;save();screen="home";render()}
   function switchRoutine(id){routineId=id;dayId=null;screen="home";save();render()}
   function addDay(){const r=activeRoutine();openModal("Agregar día",`<div><label class="label">NOMBRE DEL DÍA</label><input id="mName" class="input" placeholder="Ej. Lunes - Pecho"></div>`,()=>{r.days.push({id:uid(),name:qs("#mName").value.trim()||`Día ${r.days.length+1}`,exercises:[]});save()})}
@@ -417,8 +421,78 @@
     </div>`,
     ()=>{const name=qs("#mName").value.trim()||"Ejercicio",warm=Math.max(0,parseInt(qs("#mWarm").value||0)),sets=Math.max(1,parseInt(qs("#mSets").value||1)),reps=Math.max(0,parseInt(qs("#mReps").value||0)),rest=Math.max(0,Math.round(Number(qs("#mRest").value||0)*60)),unit=qs("#mUnit").value;
       if(e){e.name=name;e.warmupSets=warm;e.workSets=sets;e.defaultReps=reps;e.restSeconds=rest;e.unit=unit}else d.exercises.push({id:uid(),name,warmupSets:warm,workSets:sets,defaultReps:reps,restSeconds:rest,unit,sets:Array.from({length:sets},()=>({reps}))});save()})}
-  function editExercise(id){const e=activeDay().exercises.find(x=>x.id===id);openModal("Ejercicio",`<div class="form"><div><label class="label">NOMBRE</label><input id="mName" class="input" value="${esc(e.name)}"></div><div class="small">${e.warmupSets} aproximaciones · ${e.workSets} sets · ${e.defaultReps} reps · descanso ${fmtShort(e.restSeconds)}</div></div>`,()=>{e.name=qs("#mName").value.trim()||e.name;save()})}
-  function deleteExercise(id){if(!confirm("¿Eliminar este ejercicio?"))return;const d=activeDay();d.exercises=d.exercises.filter(e=>e.id!==id);save();render()}
+  function editExercise(id){
+    const e=activeDay().exercises.find(x=>x.id===id);
+    openModal("Editar ejercicio",`
+      <div class="form">
+        <div><label class="label">NOMBRE</label><input id="mName" class="input" value="${esc(e.name)}"></div>
+        <div class="two">
+          <div><label class="label">APROXIMACIONES</label><input id="mWarm" class="input" type="number" min="0" step="1" value="${e.warmupSets||0}"></div>
+          <div><label class="label">SETS DE TRABAJO</label><input id="mSets" class="input" type="number" min="1" step="1" value="${e.workSets||1}"></div>
+        </div>
+        <div class="two">
+          <div><label class="label">REPS OBJETIVO</label><input id="mReps" class="input" type="number" min="0" step="1" value="${e.defaultReps||0}"></div>
+          <div><label class="label">DESCANSO (MINUTOS)</label><input id="mRest" class="input" type="number" min="0" step="0.25" value="${((e.restSeconds||0)/60).toFixed(2).replace(/\.00$/,'')}"></div>
+        </div>
+        <div>
+          <label class="label">UNIDAD</label>
+          <select id="mUnit" class="select">
+            <option value="kg" ${(e.unit||"kg")==="kg"?"selected":""}>Kilogramos (kg)</option>
+            <option value="lb" ${(e.unit||"kg")==="lb"?"selected":""}>Libras (lb)</option>
+          </select>
+        </div>
+        <div class="small">Puedes corregir estos datos después de crear el ejercicio. El nuevo descanso se aplicará al siguiente set que completes.</div>
+        <button class="btn danger wide" type="button" id="deleteExerciseNow">Borrar este ejercicio</button>
+      </div>`,
+      ()=>{
+        const r=activeRoutine(),d=activeDay(),es=exState(dayState(r,d),e);
+        e.name=qs("#mName").value.trim()||e.name;
+        e.warmupSets=Math.max(0,parseInt(qs("#mWarm").value||0,10));
+        e.workSets=Math.max(1,parseInt(qs("#mSets").value||1,10));
+        e.defaultReps=Math.max(0,parseInt(qs("#mReps").value||0,10));
+        e.restSeconds=Math.max(0,Math.round(Number(qs("#mRest").value||0)*60));
+
+        const newUnit=qs("#mUnit").value;
+        if(newUnit!==e.unit){
+          const conv=arr=>arr.forEach(v=>{
+            if(v.weight!=="" && Number.isFinite(Number(v.weight))){
+              v.weight=(newUnit==="lb"?Number(v.weight)*2.2046226:Number(v.weight)/2.2046226).toFixed(1);
+            }
+            v.unit=newUnit;
+          });
+          conv(es.warmup);conv(es.work);
+          e.unit=newUnit;
+        }
+
+        while(es.work.length<e.workSets){
+          es.work.push({weight:"",reps:e.defaultReps,unit:e.unit,done:false});
+        }
+        if(es.work.length>e.workSets) es.work=es.work.slice(0,e.workSets);
+
+        e.sets=Array.from({length:e.workSets},(_,i)=>e.sets?.[i]||{reps:e.defaultReps});
+        save();
+      }
+    );
+
+    qs("#deleteExerciseNow").onclick=()=>{
+      if(!confirm(`¿Borrar "${e.name}" de la rutina?`)) return;
+      const d=activeDay();
+      d.exercises=d.exercises.filter(x=>x.id!==id);
+      closeModal();
+      save();
+      render();
+      toast("Ejercicio borrado");
+    };
+  }
+
+  function deleteExercise(id){
+    const d=activeDay(),e=d?.exercises.find(x=>x.id===id);
+    if(!d||!e)return;
+    if(!confirm(`¿Borrar "${e.name}" de la rutina?`))return;
+    d.exercises=d.exercises.filter(x=>x.id!==id);
+    if(screen==="workout" && exerciseIndex>=d.exercises.length) exerciseIndex=Math.max(0,d.exercises.length-1);
+    save();render();toast("Ejercicio borrado");
+  }
   function settings(){openModal("Ajustes",`<div class="form"><div><label class="label">NOMBRE DE LA APP</label><input id="mName" class="input" value="RUTINA" disabled></div><div class="small">Los datos se guardan en este dispositivo.</div></div>`,()=>{})}
   function openRIRSheet(after){
     const r=activeRoutine(),d=activeDay(),e=d.exercises[exerciseIndex],es=exState(dayState(r,d),e);rirValue=Number(es.rir??0);
