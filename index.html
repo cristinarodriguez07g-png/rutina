@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="RUTINA">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-180.png">
-  <title>RUTINA</title>
+  <title>RUTINA v14</title>
   <style>
     :root{
       --bg:#120803;--panel:#190c07;--panel2:#211008;--panel3:#2a150c;
@@ -77,6 +77,7 @@
     .rir-title{font-size:14px;text-align:center;color:#ddd0ca}.rir-controls{display:flex;justify-content:center;align-items:center;gap:18px;margin:11px 0}.rir-number{font-size:26px;font-weight:900;min-width:36px;text-align:center}.circle-mini{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#1f1009;display:grid;place-items:center;cursor:pointer}
     .stack{display:grid;gap:8px}.muted{color:var(--muted)}.small{font-size:12px}.empty{padding:28px 17px;border:1px dashed #543021;border-radius:16px;text-align:center;color:var(--muted)}
     .week-card{padding:13px 14px;border:1px solid var(--line2);border-radius:15px;background:#190c07;margin-bottom:9px}.week-card b{display:block}.week-card span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+    .exercise-detail-hero{padding:18px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(135deg,#3b160ab0,#1b0d08);margin-bottom:12px}.exercise-detail-title{font-size:27px;font-weight:900;letter-spacing:-.5px}.exercise-detail-sub{margin-top:6px;font-size:12px;color:var(--muted)}.detail-set{display:grid;grid-template-columns:34px 1fr 1fr 54px;gap:8px;align-items:center;padding:10px 0;border-top:1px solid #2b1710}.detail-set.head{font-size:10px;color:#8e817b;text-transform:uppercase;letter-spacing:.7px}.detail-check{font-weight:900;color:#ff7a42}.detail-reference{padding:13px;border:1px solid #4e2919;border-radius:14px;background:#1b0d08;margin-top:12px}.detail-note{padding:12px;border-left:2px solid var(--accent);background:#190c07;margin-top:10px;color:#d8cbc4;font-size:12px}
     .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}.cal-head{font-size:10px;color:var(--muted);text-align:center;padding:5px 0}.cal-day{aspect-ratio:1;display:grid;place-items:center;border:1px solid transparent;border-radius:10px;font-size:12px;color:#b4a39c}.cal-day.trained{background:#2a1209;border-color:#6b351d;color:#fff}.cal-day.today{border-color:var(--accent);color:#fff}
     .complete-screen{text-align:center;padding:18px 10px}.complete-title{font-size:28px;font-weight:900}.ring{width:190px;height:190px;margin:28px auto 20px;border-radius:50%;background:conic-gradient(var(--accent) var(--deg),#3b2c25 0);display:grid;place-items:center;position:relative}.ring:after{content:"";position:absolute;inset:12px;border-radius:50%;background:#160b07}.ring-inner{position:relative;z-index:1;text-align:center}.ring-num{font-size:42px;font-weight:900}.ring-sub{font-size:11px;color:var(--muted)}
     .exercise-done-label{display:block;margin-top:6px;color:#ff8756;font-size:10px;font-weight:900;letter-spacing:.8px}
@@ -84,6 +85,7 @@
   </style>
 </head>
 <body>
+<!-- RUTINA_BUILD_V14 -->
 <div class="app">
   <header class="topbar" id="topbar">
     <div><div class="eyebrow">ENTRENAMIENTO</div><h1>RUTINA</h1></div>
@@ -229,6 +231,7 @@
     else if(screen==="workout")html=workout();
     else if(screen==="complete")html=complete();
     else if(screen==="stats")html=stats();
+    else if(screen==="exercise-detail")html=exerciseDetail();
     qs("#screen").innerHTML=html;bind();
     if(screen==="workout")startMainTimer();else clearMainTimer();
   }
@@ -272,7 +275,7 @@
     return `<div class="workout-header"><button class="round" data-action="back-home">←</button><div class="grow" style="text-align:center"><div class="eyebrow">SEMANA ${r.currentWeek}</div><div class="workout-title">${esc(d.name)}</div></div><button class="round" data-action="edit-day">✎</button></div>
       <div class="card"><div class="between"><div><b>${d.exercises.length} ejercicios</b><div class="small">Aquí ves el plan. Durante el entrenamiento los ejercicios se abren uno por uno.</div></div><button class="btn secondary" data-action="add-exercise">+ Ejercicio</button></div>
       ${st.status!=="pending"?`<div style="margin-top:10px">${st.status==="trained"?`<span class="badge orange">✓ ENTRENADO</span>`:`<span class="badge gray">NO ENTRENÉ</span>`}</div>`:""}</div>
-      ${d.exercises.length?`<div class="card">${d.exercises.map((e,i)=>`<div class="plan-row"><div class="plan-number">${i+1}</div><div class="plan-main"><div class="exercise-name">${esc(e.name)}</div><div class="exercise-meta">${e.warmupSets} aprox. · ${e.workSets} sets · ${e.defaultReps} reps · ${fmtShort(e.restSeconds)} descanso</div></div><div class="row"><button class="exercise-edit-btn" data-action="exercise-edit" data-eid="${e.id}" aria-label="Editar ejercicio">✎</button><button class="exercise-delete-btn" data-action="exercise-delete" data-eid="${e.id}" aria-label="Borrar ejercicio">×</button></div></div>`).join("")}</div>`:`<div class="empty">No hay ejercicios. Añade los que tú quieras.</div>`}
+      ${d.exercises.length?`<div class="card">${d.exercises.map((e,i)=>`<div class="plan-row"><div class="plan-number">${i+1}</div><div class="plan-main"><div class="exercise-name">${esc(e.name)}</div><div class="exercise-meta">${e.warmupSets} aprox. · ${e.workSets} sets · ${e.defaultReps} reps · ${fmtShort(e.restSeconds)} descanso</div></div><div class="row"><button class="round" data-action="open-exercise" data-eid="${e.id}" aria-label="Ver ejercicio">→</button><button class="exercise-edit-btn" data-action="exercise-edit" data-eid="${e.id}" aria-label="Editar ejercicio">✎</button><button class="exercise-delete-btn" data-action="exercise-delete" data-eid="${e.id}" aria-label="Borrar ejercicio">×</button></div></div>`).join("")}</div>`:`<div class="empty">No hay ejercicios. Añade los que tú quieras.</div>`}
       ${st.status==="pending"&&d.exercises.length?`<div class="stack"><button class="btn primary wide" data-action="start-workout">COMENZAR ENTRENAMIENTO</button><button class="btn ghost wide" data-action="no-train">NO ENTRENÉ</button></div>`:""}
       ${st.status==="trained"?`<div class="card"><div class="between"><div><b>Sesión terminada</b><div class="small">${fmtDate((st.finishedAt||localISO()).slice(0,10))}</div></div><b>${fmtTime(st.durationSec)}</b></div></div>`:""}`;
   }
@@ -321,6 +324,31 @@
     </div>`;
   }
 
+
+  function exerciseDetail(){
+    const r=activeRoutine(),d=activeDay(),e=d?.exercises?.[exerciseIndex];
+    if(!r||!d||!e){screen="day";return dayPlan()}
+    const ds=dayState(r,d),es=exState(ds,e);
+    const hasActual=es.work?.some(v=>v&&(v.done||v.weight!==""||String(v.reps||"")!==""));
+    const stateLabel=ds.status==="trained"?"REALIZADO":hasActual?"EN PROCESO":"POR HACER";
+    const warmRows=e.warmupSets?Array.from({length:e.warmupSets},(_,i)=>{
+      const v=es.warmup?.[i]||{weight:"",reps:e.defaultReps,unit:e.unit,done:false};
+      return `<div class="detail-set"><span>${i+1}</span><span>${esc(v.weight||"—")} ${v.weight!==""?esc(v.unit||e.unit):""}</span><span>${esc(v.reps||e.defaultReps)}</span><span class="detail-check">${v.done?"✓":"—"}</span></div>`;
+    }).join(""):"";
+    const workRows=Array.from({length:e.workSets},(_,i)=>{
+      const v=es.work?.[i]||{weight:"",reps:e.defaultReps,unit:e.unit,done:false};
+      return `<div class="detail-set"><span>${i+1}</span><span>${esc(v.weight||"—")} ${v.weight!==""?esc(v.unit||e.unit):""}</span><span>${esc(v.reps||e.defaultReps)}</span><span class="detail-check">${v.done?"✓":"—"}</span></div>`;
+    }).join("");
+    const prev=previousExercise(r,d,e);
+    const prevHtml=prev?`<div class="detail-reference"><b>SEMANA ANTERIOR</b><div class="small">${prev.map((v,i)=>`Set ${i+1}: ${esc(v.weight||"—")} ${v.weight!==""?esc(v.unit||e.unit):""} × ${esc(v.reps||0)} ${v.done?"✓":""}`).join("<br>")}</div></div>`:`<div class="detail-reference"><b>SEMANA ANTERIOR</b><div class="small">Todavía no existe un registro anterior de este ejercicio.</div></div>`;
+    return `<div class="workout-header"><button class="round" data-action="back-plan">←</button><div class="grow" style="text-align:center"><div class="eyebrow">${esc(d.name)}</div><div class="workout-title">EJERCICIO ${exerciseIndex+1}</div></div><button class="round" data-action="exercise-edit-from-detail">✎</button></div>
+      <div class="exercise-detail-hero"><div class="eyebrow">${stateLabel}</div><div class="exercise-detail-title">${esc(e.name)}</div><div class="exercise-detail-sub">${e.warmupSets} aproximaciones · ${e.workSets} sets · ${e.defaultReps} reps · descanso ${fmtShort(e.restSeconds)}</div></div>
+      ${e.warmupSets?`<div class="card"><div class="section-title" style="font-size:17px;margin-top:0">Aproximaciones</div><div class="detail-set head"><span>#</span><span>Peso</span><span>Reps</span><span>Estado</span></div>${warmRows}</div>`:""}
+      <div class="card"><div class="section-title" style="font-size:17px;margin-top:0">Sets de trabajo</div><div class="detail-set head"><span>#</span><span>Peso</span><span>Reps</span><span>Estado</span></div>${workRows}${es.rir!==null&&es.rir!==undefined?`<div class="detail-note"><b>RIR:</b> ${esc(es.rir)}</div>`:""}${es.comments?`<div class="detail-note"><b>Nota:</b> ${esc(es.comments)}</div>`:""}</div>
+      ${prevHtml}
+      <div class="row" style="margin-top:12px;flex-wrap:wrap">${ds.status==="pending"?`<button class="btn primary" data-action="continue-exercise">CONTINUAR ENTRENAMIENTO</button>`:""}<button class="btn secondary" data-action="exercise-edit-from-detail">EDITAR</button></div>`;
+  }
+
   function stats(){
     const r=activeRoutine();if(!r)return `<div class="empty">Crea una rutina primero.</div>`;
     const entries=[];
@@ -367,6 +395,9 @@
     if(a==="add-day")return addDay();
     if(a==="edit-day")return editDay();
     if(a==="add-exercise")return addExercise();
+    if(a==="open-exercise"){const e=activeDay().exercises.find(x=>x.id===el.dataset.eid);exerciseIndex=activeDay().exercises.indexOf(e);screen="exercise-detail";return render()}
+    if(a==="exercise-edit-from-detail")return editExercise(activeDay().exercises[exerciseIndex].id);
+    if(a==="continue-exercise")return startSession();
     if(a==="exercise-edit")return editExercise(el.dataset.eid);
     if(a==="exercise-delete")return deleteExercise(el.dataset.eid);
     if(a==="delete-exercise")return deleteExercise(el.dataset.eid);
