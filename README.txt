@@ -1,8 +1,9 @@
-RUTINA v14 CORRECTA
+RUTINA v15
 
-Desde un día:
-- → abre el detalle del ejercicio.
-- ✎ edita el ejercicio.
-- × borra el ejercicio.
-
-La vista de detalle sirve tanto para ejercicios pendientes como realizados y muestra aproximaciones, sets, peso, unidad, reps, estado, RIR, notas y referencia de la semana anterior.
+Cambios:
+- RIR eliminado por completo.
+- Al terminar un ejercicio se pasa directamente al siguiente.
+- Al terminar el último ejercicio se termina la sesión.
+- El engrane ahora sirve exclusivamente para cambiar el nombre que aparece arriba de la app.
+- El nombre se puede editar, guardar y conservar al recargar.
+- Se mantienen cronómetro, descansos, KG/LB, aproximaciones, sets, historial, semanas y consulta individual de ejercicios.

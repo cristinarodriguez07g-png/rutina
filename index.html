@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="RUTINA">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-180.png">
-  <title>RUTINA v14</title>
+  <title>RUTINA v15</title>
   <style>
     :root{
       --bg:#120803;--panel:#190c07;--panel2:#211008;--panel3:#2a150c;
@@ -73,8 +73,7 @@
     .set-done{width:35px;height:35px;border-radius:50%;border:2px solid #5b453d;background:transparent;color:transparent;display:grid;place-items:center;font-weight:900;cursor:pointer}.set-done.done{background:var(--accent);border-color:var(--accent);color:#fff}.set-row.done{opacity:.6}.set-row.done .set-input{text-decoration:line-through}
     .rest-line{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;color:#b5a69f;font-size:12px;margin:-3px 0 3px}.rest-line:before,.rest-line:after{content:"";height:1px;background:#4b423e}.rest-active{color:var(--accent2);font-weight:900}
     .rest-panel{display:none;margin:8px 0 12px;border:1px solid var(--line);background:#201007;border-radius:15px;padding:12px 14px;align-items:center;justify-content:space-between}.rest-panel.show{display:flex}.rest-panel .rest-time{font-size:28px;font-weight:900}.rest-panel .rest-small{font-size:10px;color:var(--muted);font-weight:900;letter-spacing:1px}
-    .bottom-sheet{margin-top:13px;padding:15px;border-top:1px solid #362019;background:linear-gradient(#1f1009,#140805);border-radius:18px}
-    .rir-title{font-size:14px;text-align:center;color:#ddd0ca}.rir-controls{display:flex;justify-content:center;align-items:center;gap:18px;margin:11px 0}.rir-number{font-size:26px;font-weight:900;min-width:36px;text-align:center}.circle-mini{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#1f1009;display:grid;place-items:center;cursor:pointer}
+    .bottom-sheet{margin-top:13px;padding:15px;border-top:1px solid #362019;background:linear-gradient(#1f1009,#140805);border-radius:18px}.circle-mini{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#1f1009;display:grid;place-items:center;cursor:pointer}
     .stack{display:grid;gap:8px}.muted{color:var(--muted)}.small{font-size:12px}.empty{padding:28px 17px;border:1px dashed #543021;border-radius:16px;text-align:center;color:var(--muted)}
     .week-card{padding:13px 14px;border:1px solid var(--line2);border-radius:15px;background:#190c07;margin-bottom:9px}.week-card b{display:block}.week-card span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
     .exercise-detail-hero{padding:18px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(135deg,#3b160ab0,#1b0d08);margin-bottom:12px}.exercise-detail-title{font-size:27px;font-weight:900;letter-spacing:-.5px}.exercise-detail-sub{margin-top:6px;font-size:12px;color:var(--muted)}.detail-set{display:grid;grid-template-columns:34px 1fr 1fr 54px;gap:8px;align-items:center;padding:10px 0;border-top:1px solid #2b1710}.detail-set.head{font-size:10px;color:#8e817b;text-transform:uppercase;letter-spacing:.7px}.detail-check{font-weight:900;color:#ff7a42}.detail-reference{padding:13px;border:1px solid #4e2919;border-radius:14px;background:#1b0d08;margin-top:12px}.detail-note{padding:12px;border-left:2px solid var(--accent);background:#190c07;margin-top:10px;color:#d8cbc4;font-size:12px}
@@ -85,10 +84,10 @@
   </style>
 </head>
 <body>
-<!-- RUTINA_BUILD_V14 -->
+<!-- RUTINA_BUILD_V15 -->
 <div class="app">
   <header class="topbar" id="topbar">
-    <div><div class="eyebrow">ENTRENAMIENTO</div><h1>RUTINA</h1></div>
+    <div><div class="eyebrow">ENTRENAMIENTO</div><h1 id="appName">RUTINA</h1></div>
     <button class="round" id="settingsBtn" aria-label="Ajustes">⚙</button>
   </header>
   <main id="screen"></main>
@@ -116,7 +115,7 @@
   let db=loadDB();
   let screen="home", routineId=db.routines[0]?.id||null, dayId=null, exerciseIndex=0;
   let timerHandle=null, restHandle=null, restEnd=0;
-  let rirValue=0, completionData=null;
+  let completionData=null;
 
   function blankDB(){return {version:9,appTitle:"RUTINA",routines:[]}}
   function loadDB(){
@@ -167,7 +166,7 @@
   function activeDay(){return activeRoutine()?.days.find(d=>d.id===dayId)}
   function week(r,wn=activeRoutine()?.currentWeek){r.weeks[wn]=r.weeks[wn]||{startedAt:r.weekStartedAt||localISO(),closedAt:null,days:{}};return r.weeks[wn]}
   function dayState(r,d,wn=r.currentWeek){const w=week(r,wn);w.days[d.id]=w.days[d.id]||{status:"pending",startedAt:null,finishedAt:null,durationSec:0,comments:"",exercises:{}};return w.days[d.id]}
-  function exState(ds,e){ds.exercises[e.id]=ds.exercises[e.id]||{warmup:[],work:Array.from({length:e.workSets},()=>({weight:"",reps:e.defaultReps,unit:e.unit,done:false})),rir:null,comments:"",completed:false};return ds.exercises[e.id]}
+  function exState(ds,e){ds.exercises[e.id]=ds.exercises[e.id]||{warmup:[],work:Array.from({length:e.workSets},()=>({weight:"",reps:e.defaultReps,unit:e.unit,done:false})),comments:"",completed:false};return ds.exercises[e.id]}
   function setVal(arr,i,defaults={}){arr[i]=arr[i]||{weight:"",reps:"",unit:"kg",done:false,...defaults};return arr[i]}
   function weekSettled(r,wn=r.currentWeek){return r.days.length>0 && r.days.every(d=>dayState(r,d,wn).status!=="pending")}
   function trainedCount(r,wn=r.currentWeek){return r.days.filter(d=>dayState(r,d,wn).status==="trained").length}
@@ -191,11 +190,17 @@
   function advanceWeek(r){r.currentWeek++;r.weekStartedAt=localISO();week(r,r.currentWeek);save()}
   function finishExercise(){
     const r=activeRoutine(),d=activeDay(),e=d.exercises[exerciseIndex],ds=dayState(r,d),es=exState(ds,e);
-    if(!(es.work.slice(0,e.workSets).length===e.workSets&&es.work.slice(0,e.workSets).every(v=>v.done))){toast("Completa los sets de trabajo antes de continuar.");return}
-    es.completed=true;save();rirValue=0;
-    if(exerciseIndex<d.exercises.length-1){openRIRSheet(()=>{exerciseIndex++;save();render()})}
-    else{
-      openRIRSheet(()=>finishSession(true));
+    if(!(es.work.slice(0,e.workSets).length===e.workSets && es.work.slice(0,e.workSets).every(v=>v.done))){
+      toast("Completa los sets de trabajo antes de continuar.");
+      return;
+    }
+    es.completed=true;
+    save();
+    if(exerciseIndex<d.exercises.length-1){
+      exerciseIndex++;
+      render();
+    }else{
+      finishSession(true);
     }
   }
   function finishSession(allDone=false){
@@ -224,6 +229,8 @@
 
   function render(){
     qsa(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.nav===screen));
+    const appName=qs("#appName");
+    if(appName) appName.textContent=db.appTitle||"RUTINA";
     let html="";
     if(screen==="home")html=home();
     else if(screen==="routine")html=routineManager();
@@ -344,7 +351,7 @@
     return `<div class="workout-header"><button class="round" data-action="back-plan">←</button><div class="grow" style="text-align:center"><div class="eyebrow">${esc(d.name)}</div><div class="workout-title">EJERCICIO ${exerciseIndex+1}</div></div><button class="round" data-action="exercise-edit-from-detail">✎</button></div>
       <div class="exercise-detail-hero"><div class="eyebrow">${stateLabel}</div><div class="exercise-detail-title">${esc(e.name)}</div><div class="exercise-detail-sub">${e.warmupSets} aproximaciones · ${e.workSets} sets · ${e.defaultReps} reps · descanso ${fmtShort(e.restSeconds)}</div></div>
       ${e.warmupSets?`<div class="card"><div class="section-title" style="font-size:17px;margin-top:0">Aproximaciones</div><div class="detail-set head"><span>#</span><span>Peso</span><span>Reps</span><span>Estado</span></div>${warmRows}</div>`:""}
-      <div class="card"><div class="section-title" style="font-size:17px;margin-top:0">Sets de trabajo</div><div class="detail-set head"><span>#</span><span>Peso</span><span>Reps</span><span>Estado</span></div>${workRows}${es.rir!==null&&es.rir!==undefined?`<div class="detail-note"><b>RIR:</b> ${esc(es.rir)}</div>`:""}${es.comments?`<div class="detail-note"><b>Nota:</b> ${esc(es.comments)}</div>`:""}</div>
+      <div class="card"><div class="section-title" style="font-size:17px;margin-top:0">Sets de trabajo</div><div class="detail-set head"><span>#</span><span>Peso</span><span>Reps</span><span>Estado</span></div>${workRows}${es.comments?`<div class="detail-note"><b>Nota:</b> ${esc(es.comments)}</div>`:""}</div>
       ${prevHtml}
       <div class="row" style="margin-top:12px;flex-wrap:wrap">${ds.status==="pending"?`<button class="btn primary" data-action="continue-exercise">CONTINUAR ENTRENAMIENTO</button>`:""}<button class="btn secondary" data-action="exercise-edit-from-detail">EDITAR</button></div>`;
   }
@@ -524,14 +531,20 @@
     if(screen==="workout" && exerciseIndex>=d.exercises.length) exerciseIndex=Math.max(0,d.exercises.length-1);
     save();render();toast("Ejercicio borrado");
   }
-  function settings(){openModal("Ajustes",`<div class="form"><div><label class="label">NOMBRE DE LA APP</label><input id="mName" class="input" value="RUTINA" disabled></div><div class="small">Los datos se guardan en este dispositivo.</div></div>`,()=>{})}
-  function openRIRSheet(after){
-    const r=activeRoutine(),d=activeDay(),e=d.exercises[exerciseIndex],es=exState(dayState(r,d),e);rirValue=Number(es.rir??0);
-    qs("#modalRoot").innerHTML=`<div class="modal-bg"><div class="modal"><div class="rir-title">¿Cuántas repeticiones más crees que podrías haber hecho?</div><div class="rir-controls"><button class="circle-mini" id="rirMinus">−</button><div class="rir-number" id="rirValue">${rirValue}</div><button class="circle-mini" id="rirPlus">+</button></div><button class="btn primary wide" id="rirNext">${exerciseIndex===d.exercises.length-1?"FINALIZAR ENTRENAMIENTO":"SIGUIENTE EJERCICIO"}</button><button class="btn danger wide" style="margin-top:8px" id="rirStop">TERMINAR ENTRENAMIENTO</button></div></div>`;
-    qs("#rirMinus").onclick=()=>{rirValue=Math.max(0,rirValue-1);qs("#rirValue").textContent=rirValue};
-    qs("#rirPlus").onclick=()=>{rirValue=Math.min(20,rirValue+1);qs("#rirValue").textContent=rirValue};
-    qs("#rirNext").onclick=()=>{es.rir=rirValue;save();qs("#modalRoot").innerHTML="";after()};
-    qs("#rirStop").onclick=()=>{es.rir=rirValue;save();qs("#modalRoot").innerHTML="";finishSession(false)};
+  function settings(){
+    openModal("Cambiar nombre del entrenamiento",`
+      <div class="form">
+        <div>
+          <label class="label">NOMBRE</label>
+          <input id="mAppName" class="input" value="${esc(db.appTitle||"RUTINA")}" placeholder="Ej. RUTINA">
+        </div>
+        <div class="small">Este nombre aparece arriba de la aplicación. No cambia el nombre de ninguna rutina.</div>
+      </div>`,
+      ()=>{
+        db.appTitle=qs("#mAppName").value.trim()||"RUTINA";
+        save();
+      }
+    );
   }
 
   // Boot
