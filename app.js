@@ -7,9 +7,21 @@ const today=()=>new Date().toISOString().slice(0,10);
 const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
 const fmt=k=>new Date(k+"T12:00:00").toLocaleDateString("es-MX",{day:"numeric",month:"short"});
 const escapeHtml=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-function load(){try{return JSON.parse(localStorage.getItem(KEY))||{appTitle:"RUTINA",routines:[],sessions:{}}}catch{return {appTitle:"RUTINA",routines:[],sessions:{}}}}
+function load(){
+  let x;
+  try{x=JSON.parse(localStorage.getItem(KEY))||{appTitle:"RUTINA",routines:[],sessions:{}}}
+  catch{x={appTitle:"RUTINA",routines:[],sessions:{}}}
+  x.appTitle=x.appTitle||"RUTINA"; x.routines=x.routines||[]; x.sessions=x.sessions||{};
+  x.routines.forEach(r=>r.days?.forEach(d=>d.exercises?.forEach(e=>{
+    e.warmupSets=Math.max(0,Number(e.warmupSets||0));
+    e.restSeconds=Math.max(0,Number(e.restSeconds??150));
+    e.unit=e.unit||"kg"; e.sessionUnit=e.sessionUnit||e.unit; e.sets=e.sets||[];
+  })));
+  return x;
+}
 let db=load();
 let nav="home", currentRoutineId=null, currentDayId=null, currentExerciseId=null;
+let restTimer={endAt:0,remaining:0,exerciseName:"",interval:null};
 
 function save(){localStorage.setItem(KEY,JSON.stringify(db))}
 function activeRoutine(){return db.routines.find(r=>r.id===currentRoutineId)||db.routines[0]}
@@ -40,6 +52,7 @@ function render(){
   else if(nav==="workout") html=workoutView();
   document.getElementById("screen").innerHTML=html;
   bind();
+  updateRestTimerUI();
 }
 
 function homeView(){
@@ -108,6 +121,7 @@ function workoutView(){
     <div style="text-align:center;flex:1"><div class="eyebrow">ENTRENAMIENTO</div><h2>${escapeHtml(d.name)}</h2></div>
     <button class="round-btn" data-action="finish-workout">✓</button>
   </div>
+  <div id="restTimerBox" class="rest-timer hidden"><div><div id="restLabel" class="rest-label">Descanso</div><div id="restTime" class="rest-time">00:00</div></div><button class="btn secondary" data-action="skip-rest">Saltar</button></div>
   ${d.exercises.length?d.exercises.map(e=>workoutExercise(r,d,s,e)).join(""):`<div class="empty">Agrega ejercicios a este día antes de entrenar.</div>`}
   <div class="card comment"><label class="label">COMENTARIOS DE ESTA SESIÓN</label><textarea class="textarea" data-session-comment placeholder="Ej. con aproximaciones, buena técnica, cansancio...">${escapeHtml(s.comments||"")}</textarea></div>
   <div class="sticky-cta"><button class="btn primary wide" data-action="finish-workout">TERMINAR ENTRENAMIENTO</button></div>`;
@@ -115,31 +129,33 @@ function workoutView(){
 
 function workoutExercise(r,d,s,e){
   const prev=previousRecord(r.id,d.id,e.id,today());
-  const defaultUnit=(e.unit||"kg");
-  const currentUnit=e.sessionUnit||defaultUnit;
-  const rows=e.sets.map((set,i)=>{
-    const v=s.sets[setKey(e.id,i)]||{weight:"",reps:set.reps||"",unit:currentUnit,done:false};
-    const unit=v.unit||currentUnit;
-    return `<div class="set-row ${v.done?"done":""}">
-      <div class="set-num">${i+1}</div>
-      <input class="set-input" type="number" step="0.5" inputmode="decimal" placeholder="0" value="${escapeHtml(v.weight)}" data-field="weight" data-eid="${e.id}" data-si="${i}">
-      <input class="set-input" type="number" step="1" inputmode="numeric" placeholder="${escapeHtml(set.reps||"reps")}" value="${escapeHtml(v.reps)}" data-field="reps" data-eid="${e.id}" data-si="${i}">
-      <button class="set-done ${v.done?"done":""}" data-action="toggle-set" data-eid="${e.id}" data-si="${i}">${v.done?"✓":""}</button>
-    </div>`;
-  }).join("");
+  const currentUnit=e.sessionUnit||e.unit||"kg";
+  const warmupRows=Array.from({length:e.warmupSets||0},(_,i)=>setRow(e,s,d,i,{warmup:true},currentUnit));
+  const workRows=e.sets.map((set,i)=>setRow(e,s,d,i,{warmup:false},currentUnit)).join("");
   return `<div class="card exercise-card">
     <div class="exercise-head">
-      <div><div class="exercise-name">${escapeHtml(e.name)}</div><div class="exercise-meta">${e.sets.length} sets · objetivo ${e.defaultReps||"—"} reps</div></div>
+      <div><div class="exercise-name">${escapeHtml(e.name)}</div><div class="exercise-meta">${e.warmupSets||0} aproximaciones · ${e.sets.length} sets · objetivo ${e.defaultReps||"—"} reps</div></div>
       <button class="circle" data-action="exercise-menu" data-eid="${e.id}">⋯</button>
     </div>
     <div class="segmented">
       <button class="${currentUnit==="kg"?"active":""}" data-action="set-unit" data-eid="${e.id}" data-unit="kg">KG</button>
       <button class="${currentUnit==="lb"?"active":""}" data-action="set-unit" data-eid="${e.id}" data-unit="lb">LB</button>
     </div>
-    <div class="set-head"><span></span><span>PESO (${currentUnit})</span><span>REPS</span><span></span></div>
-    ${rows}
-    <div style="margin-top:10px"><button class="btn secondary" data-action="add-set" data-eid="${e.id}">+ Agregar set</button></div>
+    ${e.warmupSets?`<div class="subhead">APROXIMACIONES</div><div class="set-head"><span></span><span>PESO (${currentUnit})</span><span>REPS</span><span></span></div>${warmupRows.join("")}`:""}
+    <div class="subhead">SETS DE TRABAJO</div><div class="set-head"><span></span><span>PESO (${currentUnit})</span><span>REPS</span><span></span></div>${workRows}
+    <div class="row-actions"><button class="btn secondary" data-action="add-set" data-eid="${e.id}">+ Agregar set</button><button class="btn secondary" data-action="add-warmup" data-eid="${e.id}">+ Aproximación</button></div>
     ${prev?`<div class="prev"><b>Semana anterior:</b> ${prev.map(x=>`${x.weight||0} ${x.unit||"kg"} × ${x.reps||0}`).join(" · ")}</div>`:"<div class=\"prev\">Semana anterior: todavía no hay registro.</div>"}
+  </div>`;
+}
+function setRow(e,s,d,si,opts,unit){
+  const key=opts.warmup?setKey(e.id,"w"+si):setKey(e.id,si);
+  const base=opts.warmup?{weight:"",reps:"",unit,done:false}: {weight:"",reps:e.sets[si]?.reps||"",unit,done:false};
+  const v=s.sets[key]||base;
+  return `<div class="set-row ${v.done?"done":""}">
+    <div class="set-num">${si+1}</div>
+    <input class="set-input" type="number" step="0.5" inputmode="decimal" placeholder="0" value="${escapeHtml(v.weight)}" data-field="weight" data-eid="${e.id}" data-si="${si}" data-warmup="${opts.warmup}">
+    <input class="set-input" type="number" step="1" inputmode="numeric" placeholder="${escapeHtml(e.defaultReps||"reps")}" value="${escapeHtml(v.reps)}" data-field="reps" data-eid="${e.id}" data-si="${si}" data-warmup="${opts.warmup}">
+    <button class="set-done ${v.done?"done":""}" data-action="toggle-set" data-eid="${e.id}" data-si="${si}" data-warmup="${opts.warmup}">${v.done?"✓":""}</button>
   </div>`;
 }
 
@@ -236,8 +252,12 @@ function addExercise(eid=null){
     <div class="form">
       <div><label class="label">EJERCICIO</label><input class="input" id="mName" value="${escapeHtml(e?.name||"")}" placeholder="Ej. Press banca"></div>
       <div class="two">
-        <div><label class="label">SETS INICIALES</label><input class="input" id="mSets" type="number" min="1" step="1" value="${setCount}"></div>
+        <div><label class="label">APROXIMACIONES</label><input class="input" id="mWarm" type="number" min="0" step="1" value="${e?.warmupSets||0}"></div>
+        <div><label class="label">SETS DE TRABAJO</label><input class="input" id="mSets" type="number" min="1" step="1" value="${setCount}"></div>
+      </div>
+      <div class="two">
         <div><label class="label">REPS OBJETIVO</label><input class="input" id="mReps" type="number" min="0" step="1" value="${e?.defaultReps||8}"></div>
+        <div><label class="label">DESCANSO</label><input class="input" id="mRest" type="number" min="0" step="15" value="${Math.round((e?.restSeconds??150)/60)}"><div class="tiny muted" style="margin-top:5px">minutos; empieza al completar una serie</div></div>
       </div>
       <div><label class="label">UNIDAD INICIAL</label>
         <select class="select" id="mUnit"><option value="kg" ${(e?.unit||"kg")==="kg"?"selected":""}>Kilogramos (kg)</option><option value="lb" ${(e?.unit||"kg")==="lb"?"selected":""}>Libras (lb)</option></select>
@@ -245,13 +265,19 @@ function addExercise(eid=null){
     </div>`,
     ()=>{
       const name=$("#mName").value.trim()||"Ejercicio";
+      const warm=Math.max(0,parseInt($("#mWarm").value||0,10));
       const n=Math.max(1,parseInt($("#mSets").value||3,10));
       const reps=Math.max(0,parseInt($("#mReps").value||0,10));
-      if(e){e.name=name;e.defaultReps=reps;e.unit=$("#mUnit").value;while(e.sets.length<n)e.sets.push({reps});while(e.sets.length>n)e.sets.pop()}
-      else d.exercises.push({id:uid(),name,defaultReps:reps,unit:$("#mUnit").value,sessionUnit:$("#mUnit").value,sets:Array.from({length:n},()=>({reps}))});
+      const restMin=Math.max(0,parseFloat($("#mRest").value||0));
+      const restSeconds=Math.round(restMin*60);
+      if(e){
+        e.name=name;e.defaultReps=reps;e.unit=$("#mUnit").value;e.restSeconds=restSeconds;e.warmupSets=warm;e.sessionUnit=e.sessionUnit||e.unit;
+        while(e.sets.length<n)e.sets.push({reps});while(e.sets.length>n)e.sets.pop()
+      }else d.exercises.push({id:uid(),name,defaultReps:reps,unit:$("#mUnit").value,sessionUnit:$("#mUnit").value,restSeconds,warmupSets:warm,sets:Array.from({length:n},()=>({reps}))});
       save();
     });
 }
+
 function deleteExercise(eid){
   if(confirm("¿Eliminar este ejercicio y sus registros de sesiones?")){
     const d=activeDay();d.exercises=d.exercises.filter(e=>e.id!==eid);save();render()
@@ -269,31 +295,45 @@ function setUnit(eid,unit){
   const d=activeDay(),e=d.exercises.find(x=>x.id===eid),s=ensureSession(activeRoutine().id,d.id);
   const old=e.sessionUnit||e.unit||"kg";
   if(old===unit)return;
-  for(let i=0;i<e.sets.length;i++){
-    const v=s.sets[setKey(e.id,i)];
-    if(v && v.weight!=="" && !Number.isNaN(Number(v.weight))){
-      v.weight=unit==="lb"?(Number(v.weight)*2.20462).toFixed(1):(Number(v.weight)/2.20462).toFixed(1);
-      v.unit=unit;
-    }
-  }
-  e.sessionUnit=unit; save();render();
+  const convert=v=>{
+    if(!v||v.weight===""||Number.isNaN(Number(v.weight)))return;
+    v.weight=unit==="lb"?(Number(v.weight)*2.20462).toFixed(1):(Number(v.weight)/2.20462).toFixed(1);v.unit=unit
+  };
+  Object.entries(s.sets).forEach(([k,v])=>{if(k.startsWith(e.id+"|"))convert(v)});
+  e.sessionUnit=unit;save();render();
 }
-function updateSet(eid,si,field,val){
+function updateSet(eid,si,field,val,warmup=false){
   const r=activeRoutine(),d=activeDay(),e=d.exercises.find(x=>x.id===eid),s=ensureSession(r.id,d.id);
-  const key=setKey(eid,si); if(!s.sets[key]) s.sets[key]={weight:"",reps:"",unit:e.sessionUnit||e.unit||"kg",done:false};
-  s.sets[key][field]=val;
-  save();
+  const key=setKey(eid,warmup?"w"+si:si); if(!s.sets[key]) s.sets[key]={weight:"",reps:warmup?"":e.sets[si]?.reps||"",unit:e.sessionUnit||e.unit||"kg",done:false};
+  s.sets[key][field]=val; save();
 }
-function toggleSet(eid,si){
+function startRestTimer(e){
+  const secs=Math.max(0,Number(e.restSeconds||0));
+  if(!secs){restTimer={endAt:0,remaining:0,exerciseName:"",interval:null};return}
+  clearInterval(restTimer.interval);
+  restTimer.endAt=Date.now()+secs*1000;restTimer.remaining=secs;restTimer.exerciseName=e.name;
+  updateRestTimerUI();
+  restTimer.interval=setInterval(()=>{restTimer.remaining=Math.max(0,Math.ceil((restTimer.endAt-Date.now())/1000));updateRestTimerUI();if(restTimer.remaining<=0){clearInterval(restTimer.interval);showToast("Descanso terminado");}},250);
+}
+function stopRestTimer(){clearInterval(restTimer.interval);restTimer={endAt:0,remaining:0,exerciseName:"",interval:null};updateRestTimerUI()}
+function formatTime(sec){const m=Math.floor(sec/60),s=sec%60;return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`}
+function updateRestTimerUI(){
+  const box=$("#restTimerBox");if(!box)return;
+  if(!restTimer.remaining){box.classList.add("hidden");return}
+  box.classList.remove("hidden");
+  const time=$("#restTime");if(time)time.textContent=formatTime(restTimer.remaining);
+  const label=$("#restLabel");if(label)label.textContent=`Descanso · ${restTimer.exerciseName}`;
+}
+function toggleSet(eid,si,warmup=false){
   const r=activeRoutine(),d=activeDay(),e=d.exercises.find(x=>x.id===eid),s=ensureSession(r.id,d.id);
-  const key=setKey(eid,si); if(!s.sets[key]) s.sets[key]={weight:"",reps:e.sets[si]?.reps||"",unit:e.sessionUnit||e.unit||"kg",done:false};
-  s.sets[key].done=!s.sets[key].done;s.started=true;
-  save();render();
+  const key=setKey(eid,warmup?"w"+si:si); if(!s.sets[key]) s.sets[key]={weight:"",reps:warmup?"":e.sets[si]?.reps||"",unit:e.sessionUnit||e.unit||"kg",done:false};
+  s.sets[key].done=!s.sets[key].done;s.started=true;save();
+  if(s.sets[key].done){startRestTimer(e)}else if(restTimer.exerciseName===e.name){stopRestTimer()}
+  render();updateRestTimerUI();
 }
-function addSet(eid){
-  const d=activeDay(),e=d.exercises.find(x=>x.id===eid);
-  e.sets.push({reps:e.defaultReps||""});save();render();
-}
+function addSet(eid){const d=activeDay(),e=d.exercises.find(x=>x.id===eid);e.sets.push({reps:e.defaultReps||""});save();render()}
+function addWarmup(eid){const d=activeDay(),e=d.exercises.find(x=>x.id===eid);e.warmupSets=(e.warmupSets||0)+1;save();render()}
+
 function finishWorkout(){
   const r=activeRoutine(),d=activeDay(),s=ensureSession(r.id,d.id);
   s.completed=true;s.started=true;s.comments=$("[data-session-comment]")?.value||s.comments||"";
@@ -324,7 +364,7 @@ function bind(){
   $("#settingsBtn").onclick=settings;
   $$("[data-open-day]").forEach(el=>el.onclick=()=>{currentDayId=el.dataset.openDay;currentRoutineId=activeRoutine()?.id;nav="day";render()});
   $$("[data-action]").forEach(el=>el.onclick=()=>action(el.dataset.action,el));
-  $$("[data-field]").forEach(inp=>inp.oninput=()=>updateSet(inp.dataset.eid,Number(inp.dataset.si),inp.dataset.field,inp.value));
+  $$("[data-field]").forEach(inp=>inp.oninput=()=>updateSet(inp.dataset.eid,Number(inp.dataset.si),inp.dataset.field,inp.value,inp.dataset.warmup==="true"));
   $$("[data-session-comment]").forEach(t=>t.oninput=()=>{const s=ensureSession(activeRoutine().id,activeDay().id);s.comments=t.value;save()});
 }
 function action(a,el){
@@ -342,8 +382,10 @@ function action(a,el){
   if(a==="back-routine"){nav="routine";return render()}
   if(a==="back-day"){nav="day";return render()}
   if(a==="finish-workout") return finishWorkout();
-  if(a==="toggle-set") return toggleSet(el.dataset.eid,Number(el.dataset.si));
+  if(a==="toggle-set") return toggleSet(el.dataset.eid,Number(el.dataset.si),el.dataset.warmup==="true");
+  if(a==="skip-rest"){stopRestTimer();return;}
   if(a==="add-set") return addSet(el.dataset.eid);
+  if(a==="add-warmup") return addWarmup(el.dataset.eid);
   if(a==="set-unit") return setUnit(el.dataset.eid,el.dataset.unit);
   if(a==="exercise-menu") return exerciseMenu(el.dataset.eid);
   if(a==="reset-data") return resetData();
