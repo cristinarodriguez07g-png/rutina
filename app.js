@@ -166,7 +166,7 @@ function homeView(){
   const p=routineProgress(r),trainedToday=r.days.filter(d=>statusFor(r.id,r.currentWeek,d.id)==="trained").length;
   const completedSessions=Object.values(db.sessions).filter(s=>s.rid===r.id&&s.status==="trained").length;
   return `<section class="hero">
-    <div class="between"><div><div class="eyebrow">RUTINA ACTIVA</div><div class="hero-title">${esc(r.name)}</div></div><button class="round-btn" data-action="edit-routine">✎</button></div>
+    <div class="between"><div><div class="eyebrow">RUTINA ACTIVA</div><div class="hero-title">${esc(r.name)}</div></div><div class="row"><button class="round-btn" data-action="edit-routine">✎</button><button class="round-btn" data-action="manage-routine">☰</button></div></div>
     <div class="hero-sub">Semana ${r.currentWeek} · ${p.settled}/${p.total} días registrados</div>
     <div class="progress"><span style="width:${p.pct}%"></span></div>
     <div class="small">${trainedToday} entrenamientos completados esta semana · ${completedSessions} sesiones históricas</div>
@@ -198,15 +198,46 @@ function dayCard(r,d,i){
   </div>`;
 }
 function routineView(){
-  const r=activeRoutine();if(!r)return `<div class="empty">No hay rutina.</div>`;
+  const r=activeRoutine();
+  if(!r) return `<div class="empty" style="margin-top:30px"><h2>Sin rutinas</h2><p style="margin-top:7px">Crea una rutina nueva para empezar.</p><button class="btn primary" style="margin-top:15px" data-action="new-routine">+ Nueva rutina</button></div>`;
   const p=routineProgress(r);
-  return `<div class="between" style="margin-bottom:12px"><div><div class="eyebrow">RUTINA</div><h2>${esc(r.name)}</h2></div><button class="round-btn" data-action="edit-routine">✎</button></div>
-  <div class="card"><div class="between"><div><b>Semana ${r.currentWeek}</b><div class="small">${p.settled}/${p.total} días registrados. La siguiente semana aparece automáticamente al cerrar todos los días.</div></div><button class="btn secondary" data-action="add-day">+ Día</button></div></div>
-  ${r.days.map((d,i)=>`<div class="card day-card" data-open-day="${d.id}">
+  return `<div class="between" style="margin-bottom:12px">
+    <div><div class="eyebrow">RUTINA ACTIVA</div><h2>${esc(r.name)}</h2></div>
+    <button class="btn primary" data-action="new-routine">+ Nueva</button>
+  </div>
+  <div class="card">
+    <div class="between">
+      <div><b>Semana ${r.currentWeek}</b><div class="small">${p.settled}/${p.total} días registrados. La rutina no tiene fecha de caducidad.</div></div>
+      <div class="pill">${r.days.length} días</div>
+    </div>
+    <div class="row-actions">
+      <button class="btn secondary" data-action="edit-routine">Editar rutina</button>
+      <button class="btn danger" data-action="delete-routine">Borrar rutina</button>
+    </div>
+  </div>
+
+  ${db.routines.length>1?`
+    <div class="section-title">Mis rutinas</div>
+    ${db.routines.map(x=>`<div class="card day-card" style="cursor:default">
+      <div class="day-badge">${x===r?"✓":"•"}</div>
+      <div class="card-main">
+        <div class="card-title">${esc(x.name)}</div>
+        <div class="card-meta">Semana ${x.currentWeek} · ${x.days.length} días · ${Object.values(db.sessions).filter(s=>s.rid===x.id&&s.status==="trained").length} sesiones</div>
+      </div>
+      <div class="row">
+        ${x.id!==r.id?`<button class="btn secondary" data-action="switch-routine" data-rid="${x.id}">Usar</button>`:`<span class="badge-orange">ACTIVA</span>`}
+      </div>
+    </div>`).join("")}
+  `:""}
+
+  <div class="section-title">Semana ${r.currentWeek}</div>
+  ${r.days.length ? r.days.map((d,i)=>`<div class="card day-card" data-open-day="${d.id}">
     <div class="day-badge">${i+1}</div><div class="card-main"><div class="card-title">${esc(d.name)}</div><div class="card-meta">${d.exercises.length} ejercicios</div></div><div class="check">→</div>
-  </div>`).join("")}
-  <div class="section-title">Semanas anteriores</div>
-  ${r.completedWeeks.length?r.completedWeeks.slice().reverse().map(w=>`<div class="week-card"><div class="week-title">Semana ${w.week}</div><div class="week-meta">Cerrada · ${fmtDate((w.closedAt||"").slice(0,10)||localISO())}</div></div>`).join(""):`<div class="empty">Todavía no hay semanas cerradas.</div>`}`;
+  </div>`).join("") : `<div class="empty">Esta rutina todavía no tiene días.<br><button class="btn secondary" style="margin-top:12px" data-action="add-day">+ Agregar día</button></div>`}
+  <div class="card" style="margin-top:14px">
+    <div class="between"><div><b>Semanas anteriores</b><div class="small">Los datos de peso, reps, sets, aproximaciones y tiempos se conservan.</div></div><span class="pill">${r.completedWeeks.length}</span></div>
+  </div>
+  ${r.completedWeeks.length ? r.completedWeeks.slice().reverse().map(w=>`<div class="week-card"><div class="week-title">Semana ${w.week}</div><div class="week-meta">Cerrada · ${fmtDate((w.closedAt||"").slice(0,10)||localISO())}</div></div>`).join("") : `<div class="empty">Todavía no hay semanas cerradas.</div>`}`;
 }
 function dayView(){
   const r=activeRoutine(),d=activeDay();if(!r||!d){nav="routine";return routineView()}
@@ -296,6 +327,34 @@ function openModal(title,body,onSave,saveText="Guardar"){
   $("#modalSave").onclick=()=>{onSave();closeModal();render()};
 }
 function closeModal(){$("#modalRoot").innerHTML=""}
+
+function deleteRoutine(){
+  const r=activeRoutine();
+  if(!r) return;
+  if(db.routines.length===1){
+    if(!confirm(`¿Borrar la rutina "${r.name}"? No habrá otra rutina activa. Esta acción también borrará su historial guardado.`)) return;
+  }else{
+    if(!confirm(`¿Borrar la rutina "${r.name}"? También se borrará su historial guardado.`)) return;
+  }
+  db.routines=db.routines.filter(x=>x.id!==r.id);
+  Object.keys(db.sessions).forEach(k=>{ if(k.startsWith(r.id+"|")) delete db.sessions[k]; });
+  currentRoutineId=db.routines[0]?.id||null;
+  currentDayId=null;
+  nav="home";
+  save();
+  render();
+  showToast("Rutina borrada");
+}
+function switchRoutine(rid){
+  const r=db.routines.find(x=>x.id===rid);
+  if(!r)return;
+  currentRoutineId=r.id;
+  currentDayId=null;
+  nav="home";
+  save();
+  render();
+  showToast(`Rutina activa: ${r.name}`);
+}
 function addRoutine(){
   openModal("Nueva rutina",`<div class="form"><div><label class="label">NOMBRE</label><input id="mName" class="input" placeholder="Ej. PPL X LEG"></div><div class="small">No se define una duración de semanas. La rutina continúa indefinidamente.</div></div>`,()=>{
     const r={id:uid(),name:$("#mName").value.trim()||"Mi rutina",days:[],currentWeek:1,weekStartedAt:localISO(),completedWeeks:[]};
@@ -389,6 +448,8 @@ function bind(){
 function handle(a,el){
   if(a==="new-routine")return addRoutine();
   if(a==="edit-routine")return editRoutine();
+  if(a==="delete-routine")return deleteRoutine();
+  if(a==="switch-routine")return switchRoutine(el.dataset.rid);
   if(a==="manage-routine"){nav="routine";return render()}
   if(a==="add-day")return addDay();
   if(a==="edit-day")return editDay();
