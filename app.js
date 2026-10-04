@@ -221,9 +221,14 @@ function weeksActive(){
 }
 function showToast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(showToast.t);showToast.t=setTimeout(()=>t.classList.remove("show"),1800)}
 
+function closeModal(){
+  $("#modalRoot").innerHTML="";
+}
 function openModal(title, body, onSave, saveText="Guardar"){
-  $("#modalRoot").innerHTML=`<div class="modal-bg"><div class="modal"><div class="modal-top"><h3>${title}</h3><button class="close" data-modal-close>×</button></div>${body}<div class="modal-actions"><button class="btn ghost" data-modal-close>Cancelar</button><button class="btn primary" id="modalSave">${saveText}</button></div></div></div>`;
-  $("#modalSave").onclick=()=>{onSave();$("#modalRoot").innerHTML="";render()};
+  $("#modalRoot").innerHTML=`<div class="modal-bg" data-modal-backdrop><div class="modal"><div class="modal-top"><h3>${title}</h3><button class="close" type="button" data-modal-close aria-label="Cerrar">×</button></div>${body}<div class="modal-actions"><button class="btn ghost" type="button" data-modal-close>Cancelar</button><button class="btn primary" type="button" id="modalSave">${saveText}</button></div></div></div>`;
+  $$('[data-modal-close]').forEach(b=>b.onclick=closeModal);
+  $("[data-modal-backdrop]").onclick=(ev)=>{if(ev.target===ev.currentTarget)closeModal()};
+  $("#modalSave").onclick=()=>{onSave();closeModal();render()};
 }
 function editRoutine(){
   const r=activeRoutine();
