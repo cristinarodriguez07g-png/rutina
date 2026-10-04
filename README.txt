@@ -1,20 +1,18 @@
-RUTINA v6
+RUTINA v7
 
-Gestión de rutinas:
-- Crear nuevas rutinas sin borrar las existentes.
-- Editar el nombre de la rutina activa.
-- Cambiar entre varias rutinas.
-- Borrar la rutina activa con confirmación, incluyendo su historial.
-- Si se borra la última rutina, la aplicación queda lista para crear una nueva.
-- Las semanas, sesiones y datos de cada rutina permanecen separados.
+Correcciones:
+- Barra de navegación inferior con colores oscuros y texto visible.
+- Los botones Inicio/Rutina/Progreso ya no heredan el estilo blanco por defecto.
+- En la pantalla de Rutina ahora aparece + Día de forma permanente.
+- Se puede agregar cualquier cantidad de días, uno tras otro.
+- También hay + Agregar día en el resumen superior.
 
-Además conserva todas las funciones de la v5:
+Conserva las funciones de v6:
+- Crear, cambiar y borrar rutinas.
 - Semanas indefinidas.
-- Días con estados PENDIENTE / ENTRENADO / NO ENTRENÉ.
-- Cierre automático de semana al resolver todos los días.
-- Cronómetro general de entrenamiento.
+- PENDIENTE / ENTRENADO / NO ENTRENÉ.
+- Cierre automático de semana.
+- Cronómetro total.
 - Descanso por ejercicio.
-- Aproximaciones y sets de trabajo.
-- KG/LB.
-- Historial y referencia de semana anterior.
-- Comentarios.
+- Aproximaciones, sets, KG/LB.
+- Historial semanal y referencias.
