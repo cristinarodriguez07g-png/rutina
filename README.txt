@@ -1,10 +1,11 @@
-RUTINA v11
+RUTINA v14
 
-Correcciones:
-- Se pueden agregar días sin límite desde la Semana 1 y las siguientes.
-- El botón + Día permanece disponible en Inicio, Rutina y dentro del menú del día.
-- Editar ejercicio permite cambiar nombre, aproximaciones, sets, reps, descanso y KG/LB.
-- Se puede borrar un ejercicio desde el menú de edición o con la X al lado del ejercicio.
-- El cambio de descanso se aplica a las siguientes series que se completen.
-- Se mantiene el flujo Kaizer: menú del día -> ejercicio individual -> siguiente ejercicio -> finalizar.
-- Cronómetro total, descansos, historial semanal, NO ENTRENÉ y cierre automático de semana.
+Flujo de consulta de ejercicios:
+- Desde el menú de un día, la flecha de cada ejercicio abre una vista individual del ejercicio.
+- La vista funciona tanto si el ejercicio está pendiente como si ya fue entrenado.
+- Muestra las aproximaciones y sets de trabajo con peso, unidad, reps y estado de cada set.
+- Muestra RIR y notas si existen.
+- Muestra la referencia de la semana anterior cuando existe.
+- El lápiz sigue editando el ejercicio y la X sigue borrándolo.
+- Desde el detalle se puede iniciar/continuar el entrenamiento.
+- El entrenamiento sigue por ejercicio, con cronómetro general y descansos.
