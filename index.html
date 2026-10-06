@@ -238,6 +238,9 @@
   function noTrain(){
     const r=activeRoutine(),d=activeDay();if(!r||!d)return;const ds=dayState(r,d);
     if(ds.status==="trained"){toast("Este día ya está entrenado.");return}
+    if(ds.status==="skipped"){toast("Este día ya está marcado como NO ENTRENÉ.");return}
+    const ok=confirm(`¿Seguro que deseas marcar "${d.name}" como NO ENTRENÉ?\n\nEsto registrará este día como no entrenado y no podrás continuar el entrenamiento de este día después.`);
+    if(!ok)return;
     ds.status="skipped";ds.finishedAt=new Date().toISOString();ds.durationSec=0;save();
     screen="home";render();toast("Día registrado como NO ENTRENÉ")
   }
