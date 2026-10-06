@@ -1,12 +1,13 @@
 {
-  "name":"RUTINA - Registro de entrenamiento",
-  "short_name":"RUTINA",
-  "start_url":"./",
-  "display":"standalone",
-  "background_color":"#120803",
-  "theme_color":"#120803",
-  "lang":"es-MX",
-  "icons":[
+  "name": "RUTINA - Registro de entrenamiento",
+  "short_name": "RUTINA",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#120803",
+  "theme_color": "#120803",
+  "lang": "es-MX",
+  "icons": [
     {"src":"icon-180.png","sizes":"180x180","type":"image/png"},
     {"src":"icon-512.png","sizes":"512x512","type":"image/png"}
   ]
