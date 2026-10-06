@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="RUTINA">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-180.png">
-  <title>RUTINA v16</title>
+  <title>RUTINA v18</title>
   <style>
     :root{
       --bg:#120803;--panel:#190c07;--panel2:#211008;--panel3:#2a150c;
@@ -239,10 +239,19 @@
     const r=activeRoutine(),d=activeDay();if(!r||!d)return;const ds=dayState(r,d);
     if(ds.status==="trained"){toast("Este día ya está entrenado.");return}
     if(ds.status==="skipped"){toast("Este día ya está marcado como NO ENTRENÉ.");return}
-    const ok=confirm(`¿Seguro que deseas marcar "${d.name}" como NO ENTRENÉ?\n\nEsto registrará este día como no entrenado y no podrás continuar el entrenamiento de este día después.`);
-    if(!ok)return;
-    ds.status="skipped";ds.finishedAt=new Date().toISOString();ds.durationSec=0;save();
-    screen="home";render();toast("Día registrado como NO ENTRENÉ")
+    openModal("Confirmar NO ENTRENÉ",`
+      <div class="form">
+        <div style="font-size:17px;line-height:1.45">¿Estás seguro de que deseas registrar <strong>${esc(d.name)}</strong> como <strong>NO ENTRENÉ</strong>?</div>
+        <div class="small">Al confirmar, este día quedará registrado como no entrenado. No se iniciará el entrenamiento de este día.</div>
+      </div>`,()=>{
+        ds.status="skipped";
+        ds.finishedAt=new Date().toISOString();
+        ds.durationSec=0;
+        save();
+        screen="home";
+        dayId=d.id;
+        toast("Día registrado como NO ENTRENÉ");
+      },"Sí, registrar");
   }
   function toast(msg){const t=qs("#toast");if(!t)return;t.textContent=msg;t.style.position="fixed";t.style.left="50%";t.style.bottom="96px";t.style.zIndex="100";t.style.transform="translate(-50%,10px)";t.style.background="#2a140b";t.style.border="1px solid #713b20";t.style.padding="10px 14px";t.style.borderRadius="999px";t.style.opacity="1";setTimeout(()=>{t.style.opacity="0"},1700)}
 
